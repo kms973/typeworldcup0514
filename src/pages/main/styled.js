@@ -15,8 +15,8 @@ export const ImgContainer = styled.div`
 `
 
 export const ImgBox = styled.img`
-    width:700px;
-    height:600px;
+    width:500px;
+    height:400px;
     `
 
 export const Game = styled.div`

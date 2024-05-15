@@ -1,5 +1,9 @@
-import React , {useState, useEffect}from 'react'
+import React, { useState, useEffect } from 'react'
 import { ImgContainer, GameContainer, ImgBox, Round, Game } from './styled'
+import { useContext } from "react";
+import { RankingContext } from "../../App";
+import { useNavigate } from 'react-router-dom';
+
 import p0 from "../../assets/images/ayaka.gif"
 import p1 from "../../assets/images/barbara.gif"
 import p2 from "../../assets/images/chichi.gif"
@@ -105,66 +109,93 @@ const candidate = [
 export const Main = () => {
 
 
-    const [candy, setCandy] = useState(candidate);
-    const [winCandy, setWinCandy] = useState([]);
-    const [round, setRound] = useState(1);
-    const [game, setGame] = useState(candidate?.length);
-    
-    useEffect(() => {
-        setCandy(
-            candidate
-                .map((c) => {
-                    return { key: c.key, name: c.name, src: c.src, order: Math.random() };
-                })
-                .sort((l, r) => {
-                    return l.order - r.order;
-                })
-        );
-    }, [])
-    
-    const handleClick = (e) => {
-        setCandy((prev) => {
-            const temp = prev.splice(0, 2)
-            return prev.filter((el, i) => el.key !== temp.key)
+  const [candy, setCandy] = useState(candidate);
+  const [winCandy, setWinCandy] = useState([]);
+  const [round, setRound] = useState(1);
+  const [game, setGame] = useState(candidate?.length);
+
+
+
+  const { value, setValue } = useContext(RankingContext);
+  console.log("confirm context api",value)
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setCandy(
+      candidate
+        .map((c) => {
+          return { key: c.key, name: c.name, src: c.src, order: Math.random() };
         })
-        setRound((prev) => prev + 1);
-        setWinCandy((prev) => [...prev, e])
+        .sort((l, r) => {
+          return l.order - r.order;
+        })
+    );
+  }, [])
 
-      
+  const handleClick = (e) => {
+    setCandy((prev) => {
+      const temp = prev.splice(0, 2)
+      return prev.filter((el, i) => el.key !== temp.key)
+    })
+    setRound((prev) => prev + 1);
+    setWinCandy((prev) => [...prev, e])
+
+
+  }
+
+  
+  const rank = () => {
+    if (value.length > 0) {
+        setValue((prev) => {
+            const temp = prev.map((e, i) =>
+                candy[0].key === e.key ?
+                    { key: e.key, name: e.name, src: e.src, score: e.score + 1 }
+                    : { key: e.key, name: e.name, src: e.src, score: e.score }
+            )
+            return temp;
+        })
+    } else {
+        const temp = candidate.map((e, i) =>
+            candy[0].key === e.key ?
+                { key: e.key, name: e.name, src: e.src, score: 1 }
+                : { key: e.key, name: e.name, src: e.src, score: 0 }
+        )
+        setValue(temp)
     }
+    navigate("/ranking");
+}
 
-    //round
-    useEffect(()=>{
-        if(game === 1 ){
-            return;
-        }
-        if(candy.length === 0){
-            setRound(1);
-            setWinCandy([]);
-            setCandy(winCandy)
-            setGame((prev) => prev / 2)
-        }
-    },[round])
+useEffect(() => {
+  if (game === 1) {
+      rank();
+      return;
+  }
+  if (candy.length === 0) {
+      setRound(1);
+      setCandy(winCandy);
+      setWinCandy([]);
+      setGame((prev) => prev / 2)
+  }
+}, [round])
 
   return (<>
-  {
-    game === 1? <Game>Win!</Game>:
-    game === 2? <Game>결승</Game>:
-     <Game>{game}{"강"}</Game>
-  }
-  {
-    game > 2 &&
-    <Round>{round}{"Round"}</Round>
-  }
-    
-    <GameContainer>{candy.map((e,i)=>{
-        if(i>1) return;
+    {
+      game === 1 ? <Game>Win!</Game> :
+        game === 2 ? <Game>결승</Game> :
+          <Game>{game}{"강"}</Game>
+    }
+    {
+      game > 2 &&
+      <Round>{round}{"Round"}</Round>
+    }
 
-        return(<ImgContainer onClick={()=>handleClick(e)}>
-        <ImgBox src={e.src}/>
-            {e.name}
-        </ImgContainer>)
+    <GameContainer>{candy.map((e, i) => {
+      if (i > 1) return;
+
+      return (<ImgContainer onClick={() => handleClick(e)}>
+        <ImgBox src={e.src} />
+        {e.name}
+      </ImgContainer>)
     })}</GameContainer>
-    </>
-  )
-}
+  </>
+  )}
